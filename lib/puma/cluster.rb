@@ -20,6 +20,7 @@ module Puma
     def initialize(cli, events)
       super cli, events
 
+      @max_batch_size = @options[:restart_workers_in_batch_of] || Const::RESTART_WORKERS_IN_BATCH_OF_DEFAULT
       @phase = 0
       @workers = []
       @next_check = Time.now
@@ -61,14 +62,20 @@ module Puma
 
     def spawn_workers
       diff = @options[:workers] - @workers.size
+      batch_size = [@max_batch_size, diff].min
+      log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
       return if diff < 1
+
+      return unless @workers.all?(&:booted?)
 
       master = Process.pid
       if @options[:fork_worker]
         @fork_writer << "-1\n"
       end
 
-      diff.times do
+      log "Booting #{batch_size} workers"
+
+      batch_size.times do
         idx = next_worker_index
 
         if @options[:fork_worker] && idx != 0
@@ -146,13 +153,15 @@ module Puma
         # we need to phase any workers out (which will restart
         # in the right phase).
         #
-        w = @workers.find { |x| x.phase != @phase }
+        ws = @workers.select { |x| x.phase != @phase }.take(@max_batch_size)
 
-        if w
-          log "- Stopping #{w.pid} for phased upgrade..."
-          unless w.term?
-            w.term
-            log "- #{w.signal} sent to #{w.pid}..."
+        if ws.any?
+          ws.each { |w| log "- Stopping #{w.pid} for phased upgrade..." }
+          ws.each do |w|
+            unless w.term?
+              w.term
+              log "- #{w.signal} sent to #{w.pid}..."
+            end
           end
         end
       end
