@@ -63,8 +63,9 @@ module Puma
     def spawn_workers
       diff = @options[:workers] - @workers.size
       batch_size = [@max_batch_size, diff].min
-      log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
       return if diff < 1
+
+      log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
 
       return unless @workers.all?(&:booted?)
 
@@ -156,8 +157,8 @@ module Puma
         ws = @workers.select { |x| x.phase != @phase }.take(@max_batch_size)
 
         if ws.any?
-          ws.each { |w| log "- Stopping #{w.pid} for phased upgrade..." }
           ws.each do |w|
+            log "- Stopping #{w.pid} for phased upgrade..."
             unless w.term?
               w.term
               log "- #{w.signal} sent to #{w.pid}..."
