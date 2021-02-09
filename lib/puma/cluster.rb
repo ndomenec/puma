@@ -65,9 +65,9 @@ module Puma
       batch_size = [@max_batch_size, diff].min
       return if diff < 1
 
-      log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
-
       return unless @workers.all?(&:booted?)
+
+      log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
 
       master = Process.pid
       if @options[:fork_worker]
