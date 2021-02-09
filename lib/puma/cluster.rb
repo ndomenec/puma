@@ -67,6 +67,8 @@ module Puma
 
       return unless @workers.all?(&:booted?)
 
+      return if @workers.any?(&:term?)
+
       log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
 
       master = Process.pid
