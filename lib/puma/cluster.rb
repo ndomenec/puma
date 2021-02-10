@@ -65,7 +65,7 @@ module Puma
       batch_size = [@max_batch_size, diff].min
       return if diff < 1
 
-      return if @workers.any?(&:term?)
+      return unless @workers.all?(&:booted?)
 
       log "- diff: #{diff}, max_batch_size: #{@max_batch_size}, batch_size: #{batch_size}"
 
@@ -136,7 +136,7 @@ module Puma
     end
 
     def all_workers_booted?
-      @workers.count { |w| !w.booted? } == 0
+      @options[:workers] == @workers.size && @workers.count { |w| !w.booted? } == 0
     end
 
     def check_workers
