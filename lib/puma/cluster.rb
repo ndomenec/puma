@@ -136,7 +136,7 @@ module Puma
     end
 
     def all_workers_booted?
-      @options[:workers] == @workers.size && @workers.count { |w| !w.booted? } == 0
+      @workers.count { |w| !w.booted? } == 0
     end
 
     def check_workers
