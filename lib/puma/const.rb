@@ -238,6 +238,7 @@ module Puma
 
     # Mininum interval to checks worker health
     WORKER_CHECK_INTERVAL = 5
+    RESTART_WORKERS_IN_BATCH_OF_DEFAULT = 5
 
   end
 end
